@@ -27,23 +27,48 @@ func main() {
 	case "create":
 		switch usertype := os.Args[2]; usertype {
 		case "ccuser":
-			createCommandCenterUser(db)
+			checkUserCreate()
+			CreateUser(db)
 		case "mqttuser":
-			// TODO create MQTT user
+			checkUserCreate()
+			CreateUser(db)
+			// Probably going to need some permissions implemented.
 		default:
-			// TODO create function with explination of how to use tooling.
+			help()
 		}
 	default:
-		// TODO create function with explination of how to use tooling.
+		help()
 	}
 }
 
-func createCommandCenterUser(db *gorm.DB) {
+func help() {
+	fmt.Println("")
+	fmt.Println("Usage: hiveuser [option]")
+	fmt.Println("hiveuser create ccuser YOURUSERNAME YOURPASSWORD")
+	fmt.Println("Valid Options:")
+	fmt.Println("--------------")
+	fmt.Println("")
+	fmt.Println("init,	Create databases required for the extention")
+	fmt.Println("create, Create user. Requires type ccuser or mqttuser")
+	fmt.Println("")
+}
+
+func checkUserCreate() {
+	if len(os.Args[3]) == 0 {
+		help()
+		fmt.Println("You are missing username or password")
+	} else if len(os.Args[4]) == 0 {
+		help()
+		fmt.Println("You are missing username or password")
+	}
+}
+
+func CreateUser(db *gorm.DB) {
 
 	user := CcUser{
 		Model:              gorm.Model{},
-		Username:           "ornell",
-		Password:           base64.StdEncoding.EncodeToString([]byte("password123")),
+		Username:           os.Args[3],
+		Password:           base64.StdEncoding.EncodeToString([]byte(os.Args[4])),
 		PasswordIterations: 100,
 		PasswordSalt:       "IThEd9r1+ALx/d++tdcOmw==",
 		Algorithm:          "SHA512",
@@ -89,7 +114,6 @@ func seedDB() {
 	//(3, 3);
 }
 
-// insert into users (username, password, password_iterations, password_salt, algorithm) values ('my_user', 'bSdf47hY52qPBShvJE+mgcGtuQyveNdGWtO11BSm6l6Bp6cicW3ulb9GYaVTxCLyuIbzOgb5VM6KysxXhNgGrA==', 100, 'IThEd9r1+ALx/d++tdcOmw==', 'SHA512');
 func initDB(db gorm.DB) {
 	// Migrate the schema
 	err := db.AutoMigrate(&CcUser{})
